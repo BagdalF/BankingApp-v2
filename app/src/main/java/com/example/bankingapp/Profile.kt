@@ -1,52 +1,57 @@
 package com.example.bankingapp
 
-import android.os.Bundle
-import com.example.bankingapp.components.*
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
 import android.content.Context
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.tooling.preview.Preview
-import com.example.bankingapp.ui.theme.BankingAppTheme
-
-fun saveProfile(context: Context, firstName: String, lastName: String, phone: String, email: String) {
-    val prefs = context.getSharedPreferences("profile_prefs", Context.MODE_PRIVATE)
-    prefs.edit().apply {
-        putString("firstName", firstName)
-        putString("lastName", lastName)
-        putString("phone", phone)
-        putString("email", email)
-        apply()
-    }
-}
-
-
+import com.example.bankingapp.controllers.PreferencesHelper
+import com.example.bankingapp.controllers.ProfileData
+import com.example.bankingapp.lists.profileList
 
 @Composable
 fun EditProfileScreen() {
     val context = LocalContext.current
-    val profile = remember { loadProfile(context) }
+    val prefs = remember { PreferencesHelper(context) }
+    val profile = prefs.user ?: return
 
     var firstName by remember { mutableStateOf(profile.firstName) }
     var lastName by remember { mutableStateOf(profile.lastName) }
     var phone by remember { mutableStateOf(profile.phone) }
     var email by remember { mutableStateOf(profile.email) }
 
-
+    fun saveProfile(context: Context, firstName: String, lastName: String, phone: String, email: String) {
+        val updatedProfile = ProfileData(profile.id, firstName, lastName, phone, email)
+        val index = profileList.indexOfFirst { it.id == profile.id }
+        if (index != -1) {
+            profileList[index] = updatedProfile
+        }
+        prefs.user = updatedProfile
+    }
 
     Column(
         modifier = Modifier
