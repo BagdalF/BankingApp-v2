@@ -26,17 +26,23 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.bankingapp.components.Header
+import com.example.bankingapp.controllers.PreferencesHelper
+import com.example.bankingapp.lists.populateWithGenericProfiles
+import com.example.bankingapp.lists.populateWithGenericTransactions
 
 class BankingAppActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
+            populateWithGenericProfiles()
+            populateWithGenericTransactions()
             AppNavigation()
         }
     }
@@ -47,16 +53,19 @@ data class Route( val name: String, val route: String, val icon: ImageVector )
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
+    val context = LocalContext.current
+    val prefs = remember { PreferencesHelper(context) }
+    val currentUser = prefs.user
 
     var selectedItem by remember { mutableIntStateOf(0) }
     var lastSelectedItem by remember { mutableIntStateOf(0) }
     val routes = listOf(
-        Route("Profile", "profile/{id}", Icons.Filled.Person),
-        Route("Bank Statement", "statement/{id}", Icons.Filled.Settings),
-        Route("Transfer", "transfer/{id}", Icons.Filled.Info)
+        Route("Profile", "profile/${'$'}{user.id}", Icons.Filled.Person),
+        Route("Bank Statement", "statement/${'$'}{user.id}", Icons.Filled.Settings),
+        Route("Transfer", "transfer/${'$'}{user.id}", Icons.Filled.Info)
     )
 
-    NavHost(navController = navController, startDestination = "profile/testes") {
+    NavHost(navController = navController, startDestination = "login") {
         composable("login") {
             Header(
                 title = "Login"
@@ -66,7 +75,7 @@ fun AppNavigation() {
                 innerPadding ->
 
                 Column(modifier = Modifier.padding(innerPadding)) {
-                    LoginScreen()
+                    LoginScreen(navController = navController, context = context)
                 }
             }
         }
@@ -105,7 +114,7 @@ fun AppNavigation() {
                 Column(modifier = Modifier.padding(innerPadding)) {
                     Header(
                         title = routes[selectedItem].name,
-                        onIconClick = { navController.popBackStack(); selectedItem = lastSelectedItem; }
+                        onIconClick = { navController.popBackStack(); val aux = selectedItem; selectedItem = lastSelectedItem; lastSelectedItem = aux; }
                     )
 
                     EditProfileScreen()
@@ -149,7 +158,7 @@ fun AppNavigation() {
                         onIconClick = { navController.popBackStack(); selectedItem = lastSelectedItem; }
                     )
 
-                    StatementScreen()
+                    StatementScreen(currentUser)
                 }
             }
         }

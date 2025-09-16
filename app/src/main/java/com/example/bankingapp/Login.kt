@@ -19,22 +19,26 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import com.example.bankingapp.controllers.PreferencesHelper
+import com.example.bankingapp.lists.profileList
 
 @Composable
-fun LoginScreen() {
+fun LoginScreen(navController: NavController, context: android.content.Context) {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
     ) {
-
         Spacer(modifier = Modifier.height(24.dp))
 
         var email by remember { mutableStateOf("") }
         var password by remember { mutableStateOf("") }
+        var errorMessage by remember { mutableStateOf("") }
 
         Column(
             modifier = Modifier
@@ -58,10 +62,26 @@ fun LoginScreen() {
                 singleLine = true
             )
 
+            if (errorMessage.isNotEmpty()) {
+                Text(errorMessage, color = Color.Red, fontSize = 14.sp)
+            }
+
             Spacer(modifier = Modifier.height(16.dp))
 
             Button(
-                onClick = { /* ação login */ },
+                onClick = {
+                    val user = profileList.find { it.email == email && it.password == password }
+                    if (user != null) {
+                        val prefs = PreferencesHelper(context)
+                        prefs.user = user
+                        prefs.isLogged = true
+                        navController.navigate("profile/${'$'}{user.id}") {
+                            popUpTo("login") { inclusive = true }
+                        }
+                    } else {
+                        errorMessage = "Invalid credentials."
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
@@ -73,13 +93,13 @@ fun LoginScreen() {
             }
         }
         Spacer(modifier = Modifier.weight(1f))
-
     }
 }
 
 @Preview(showBackground = true)
 @Composable
 fun LoginPreview() {
-    LoginScreen()
-
+    val context = LocalContext.current
+    // Dummy NavController for preview
+    LoginScreen(navController = object : NavController(context) {}, context = context)
 }

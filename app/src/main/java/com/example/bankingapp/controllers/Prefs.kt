@@ -54,5 +54,16 @@ data class ProfileData(
     val firstName: String,
     val lastName: String,
     val phone: String,
-    val email: String
+    val email: String,
+    val password: String
+)
+
+data class TransactionData(
+    val id: Int,
+    val date: String,
+    val description: String?,
+    val idReceiver: Int,
+    val idSender: Int,
+    val amount: Double,
+    val currency: String
 )

@@ -1,5 +1,6 @@
 package com.example.bankingapp
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -19,12 +20,27 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.bankingapp.controllers.PreferencesHelper
+import com.example.bankingapp.controllers.TransactionData
+import com.example.bankingapp.lists.profileList
+import com.example.bankingapp.lists.transactionList
 
 @Composable
 fun TransferScreen() {
+    val context = LocalContext.current
+    val prefs = remember { PreferencesHelper(context) }
+    val currentUser = prefs.user
+
+    var accolade by remember { mutableStateOf("CF0000-AC") }
+    var name by remember { mutableStateOf("") }
+    var amount by remember { mutableStateOf("0.00") }
+    var currency by remember { mutableStateOf("R$") }
+    var errorMsg by remember { mutableStateOf<String?>(null) }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -32,11 +48,6 @@ fun TransferScreen() {
     ) {
 
         Spacer(modifier = Modifier.height(24.dp))
-
-        var accolade by remember { mutableStateOf("CF0000-AC") }
-        var name by remember { mutableStateOf("") }
-        var amount by remember { mutableStateOf("0.00") }
-        var currency by remember { mutableStateOf("R$") }
 
         Column(
             modifier = Modifier
@@ -71,7 +82,38 @@ fun TransferScreen() {
             Spacer(modifier = Modifier.height(16.dp))
 
             Button(
-                onClick = { /* ação enviar */ },
+                onClick = {
+                    errorMsg = null
+                    val receiver = profileList.find { it.firstName.equals(name, true) || it.lastName.equals(name, true) }
+                    val amt = amount.toDoubleOrNull()
+                    if (currentUser == null) {
+                        errorMsg = "No user logged in."
+                    } else if (receiver == null) {
+                        errorMsg = "Receiver not found."
+                    } else if (amt == null || amt <= 0.0) {
+                        errorMsg = "Invalid amount."
+                    } else if (receiver.id == currentUser.id) {
+                        errorMsg = "Cannot transfer to yourself."
+                    } else {
+                        // Add transaction to transactionList
+                        val newId = (transactionList.maxOfOrNull { it.id } ?: 0) + 1
+                        transactionList.add(
+                            TransactionData(
+                                id = newId,
+                                date = "2025",
+                                description = "Transfer to ${receiver.firstName} ${receiver.lastName}",
+                                idReceiver = receiver.id,
+                                idSender = currentUser.id,
+                                amount = amt,
+                                currency = currency
+                            )
+                        )
+                        accolade = "CF0000-AC"
+                        name = ""
+                        amount = "0.00"
+                        Toast.makeText(context, "Transfer successful!", Toast.LENGTH_SHORT).show()
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
@@ -81,9 +123,12 @@ fun TransferScreen() {
             ) {
                 Text("Send", color = Color.White, fontSize = 16.sp)
             }
+
+            errorMsg?.let {
+                Text(it, color = Color.Red, fontSize = 14.sp)
+            }
         }
         Spacer(modifier = Modifier.weight(1f))
-
     }
 }
 

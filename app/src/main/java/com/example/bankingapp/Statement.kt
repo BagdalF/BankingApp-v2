@@ -23,46 +23,39 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.bankingapp.controllers.ProfileData
+import com.example.bankingapp.controllers.TransactionData
+import com.example.bankingapp.lists.populateWithGenericProfiles
+import com.example.bankingapp.lists.profileList
+import com.example.bankingapp.lists.transactionList
 import com.example.bankingapp.ui.theme.BankingAppTheme
 
-data class Transaction(
-    val date: String,
-    val description: String,
-    val amount: String
-)
-
 @Composable
-fun StatementScreen() {
-    val context = LocalContext.current
-    val profile = remember { loadProfile(context) }
+fun StatementScreen(user: ProfileData?) {
+    // Filtra transações onde o usuário é remetente ou destinatário
+    val transactions = remember {
+        if (user == null) emptyList() else
+            transactionList.filter { it.idSender == user.id || it.idReceiver == user.id }
+                .sortedByDescending { it.date }
+    }
 
-    val transactions = listOf(
-        Transaction("24 OCT", "Anerkeyo Maestro", "- R$ 29,61"),
-        Transaction("18 OCT", "Starting Maestro", "- R$ 19,81"),
-        Transaction("18 OCT", "GutEare", "- R$ 259,87"),
-        Transaction("16 OCT", "Paypal", "- R$ 204,27"),
-        Transaction("16 OCT", "Masto card", "- R$ 147,27"),
-        Transaction("14 OCT", "Benkcontact", "- R$ 29,61")
-    )
+    // Calcula saldo simples (entradas - saídas)
+    val balance = remember {
+        if (user == null) 0.0 else
+            transactions.sumOf {
+                when (user.id) {
+                    it.idReceiver -> it.amount
+                    it.idSender -> -it.amount
+                    else -> 0.0
+                }
+            }
+    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFF5F5F5))
     ) {
-        //Header(title = "Bank Statement", onIconClick = {}, actions = {
-        //    IconButton(onClick = { /* ação da lupa */ }) {
-        //        Icon(
-        //            imageVector = Icons.Default.Search,
-        //            contentDescription = "Search",
-        //            tint = Color.White
-        //        )
-        //    }
-        //})
-
-        // Spacer(modifier = Modifier.height(8.dp))
-
-        // Card com saldo e usuário
         Card(
             modifier = Modifier
                 .padding(16.dp)
@@ -78,20 +71,39 @@ fun StatementScreen() {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column {
-                    Text("${profile.firstName} ${profile.lastName}", fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                    Text(profile.email, fontSize = 14.sp, color = Color.Gray)
+                    Text(
+                        "${user?.firstName ?: ""} ${user?.lastName ?: ""}",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp
+                    )
+                    Text(user?.email ?: "", fontSize = 14.sp, color = Color.Gray)
                 }
-                Text("R$ 293,42", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = Color(0xFF1976D2))
+                Text(
+                    "R$ %.2f".format(balance),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp,
+                    color = Color(0xFF1976D2)
+                )
             }
         }
 
-        // Lista de transações
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 16.dp)
         ) {
             items(transactions) { transaction ->
+                // Descobre o outro participante
+                val isSender = transaction.idSender == user?.id
+                val otherId = if (isSender) transaction.idReceiver else transaction.idSender
+                val otherProfile = profileList.find { it.id == otherId }
+                val otherName = if (otherProfile != null)
+                    "${otherProfile.firstName} ${otherProfile.lastName}"
+                else "Unknown"
+
+                val amountPrefix = if (isSender) "- " else "+ "
+                val amountColor = if (isSender) Color.Red else Color(0xFF388E3C)
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -100,22 +112,27 @@ fun StatementScreen() {
                 ) {
                     Column {
                         Text(transaction.date, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                        Text(transaction.description, color = Color.Gray, fontSize = 14.sp)
+                        Text(otherName, color = Color.Gray, fontSize = 14.sp)
+                        Text(transaction.description ?: "", color = Color.DarkGray, fontSize = 13.sp)
                     }
-                    Text(transaction.amount, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color.Black)
+                    Text(
+                        amountPrefix + transaction.currency + " %.2f".format(transaction.amount),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        color = amountColor
+                    )
                 }
                 HorizontalDivider(thickness = 1.dp, color = Color.LightGray)
             }
         }
-
-        // Spacer(modifier = Modifier.weight(1f))
-
-        // NavBar()
     }
 }
 
 @Preview(showBackground = true)
 @Composable
 fun PreviewStatementScreen() {
-    StatementScreen()
+    // Exemplo: mostra para o primeiro usuário da lista
+    populateWithGenericProfiles()
+
+    StatementScreen(user = profileList.firstOrNull())
 }

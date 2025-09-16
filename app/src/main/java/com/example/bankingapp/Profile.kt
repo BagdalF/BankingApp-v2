@@ -45,7 +45,7 @@ fun EditProfileScreen() {
     var email by remember { mutableStateOf(profile.email) }
 
     fun saveProfile(context: Context, firstName: String, lastName: String, phone: String, email: String) {
-        val updatedProfile = ProfileData(profile.id, firstName, lastName, phone, email)
+        val updatedProfile = ProfileData(profile.id, firstName, lastName, phone, email, password = profile.password)
         val index = profileList.indexOfFirst { it.id == profile.id }
         if (index != -1) {
             profileList[index] = updatedProfile
