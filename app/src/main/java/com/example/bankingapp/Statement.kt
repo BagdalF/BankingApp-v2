@@ -1,19 +1,18 @@
 package com.example.bankingapp
 
-import android.os.Bundle
-import com.example.bankingapp.components.*
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import android.content.Context
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -24,11 +23,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.bankingapp.controllers.ProfileData
-import com.example.bankingapp.controllers.TransactionData
 import com.example.bankingapp.lists.populateWithGenericProfiles
 import com.example.bankingapp.lists.profileList
 import com.example.bankingapp.lists.transactionList
-import com.example.bankingapp.ui.theme.BankingAppTheme
 
 @Composable
 fun StatementScreen(user: ProfileData?) {

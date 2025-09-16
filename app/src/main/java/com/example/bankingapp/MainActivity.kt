@@ -33,8 +33,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.bankingapp.components.Header
 import com.example.bankingapp.controllers.PreferencesHelper
+import com.example.bankingapp.controllers.ProfileData
 import com.example.bankingapp.lists.populateWithGenericProfiles
 import com.example.bankingapp.lists.populateWithGenericTransactions
+import com.example.bankingapp.lists.profileList
 
 class BankingAppActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -62,7 +64,7 @@ fun AppNavigation() {
     val routes = listOf(
         Route("Profile", "profile/${'$'}{user.id}", Icons.Filled.Person),
         Route("Bank Statement", "statement/${'$'}{user.id}", Icons.Filled.Settings),
-        Route("Transfer", "transfer/${'$'}{user.id}", Icons.Filled.Info)
+        Route("Transaction", "transaction/${'$'}{user.id}", Icons.Filled.Info)
     )
 
     NavHost(navController = navController, startDestination = "login") {
@@ -75,13 +77,26 @@ fun AppNavigation() {
                 innerPadding ->
 
                 Column(modifier = Modifier.padding(innerPadding)) {
-                    LoginScreen(navController = navController, context = context)
+                    LoginScreen {
+                        email, password, errorMessage ->
+                        val user = profileList.find { it.email == email && it.password == password }
+                        if (user != null) {
+                            prefs.user = user
+                            prefs.isLogged = true
+                            navController.navigate("profile/${'$'}{user.id}") {
+                                popUpTo("login") { inclusive = true }
+                            }
+                        } else {
+                            errorMessage()
+                        }
+                    }
                 }
             }
         }
         composable("profile/{id}") {
             backstackEntry ->
             val param = backstackEntry.arguments?.getString("id") ?: ""
+            if (param.isEmpty() || param.toInt() != currentUser?.id) {  navController.navigate("login") { }
 
             Scaffold(modifier = Modifier.fillMaxSize(),
                 bottomBar =
@@ -109,21 +124,30 @@ fun AppNavigation() {
                             }
                         }
                     }
-            ) {
-                innerPadding ->
-                Column(modifier = Modifier.padding(innerPadding)) {
-                    Header(
-                        title = routes[selectedItem].name,
-                        onIconClick = { navController.popBackStack(); val aux = selectedItem; selectedItem = lastSelectedItem; lastSelectedItem = aux; }
-                    )
+                ) {
+                    innerPadding ->
+                    Column(modifier = Modifier.padding(innerPadding)) {
+                        Header(
+                            title = routes[selectedItem].name,
+                            onIconClick = { navController.popBackStack(); val aux = selectedItem; selectedItem = lastSelectedItem; lastSelectedItem = aux; }
+                        )
 
-                    EditProfileScreen()
+                        EditProfileScreen(currentUser!!, onSaveChanges = { firstName, lastName, phone, email ->
+                            val updatedProfile = ProfileData(id = currentUser.id, firstName, lastName, phone, email, password = currentUser.password)
+                            val index = profileList.indexOfFirst { it.id == currentUser.id }
+                            if (index != -1) {
+                                profileList[index] = updatedProfile
+                            }
+                            prefs.user = updatedProfile
+                        })
+                    }
                 }
             }
         }
         composable("statement/{id}") {
             backstackEntry ->
             val param = backstackEntry.arguments?.getString("id") ?: ""
+            if (param.isEmpty() || param.toInt() != currentUser?.id) {  navController.navigate("login") { } }
 
             Scaffold( modifier = Modifier.fillMaxSize(),
                 bottomBar =
@@ -155,16 +179,17 @@ fun AppNavigation() {
                 Column(modifier = Modifier.padding(innerPadding)) {
                     Header(
                         title = routes[selectedItem].name,
-                        onIconClick = { navController.popBackStack(); selectedItem = lastSelectedItem; }
+                        onIconClick = { navController.popBackStack(); val aux = selectedItem; selectedItem = lastSelectedItem; lastSelectedItem = aux; }
                     )
 
                     StatementScreen(currentUser)
                 }
             }
         }
-        composable("transfer/{id}") {
+        composable("transaction/{id}") {
             backstackEntry ->
             val param = backstackEntry.arguments?.getString("id") ?: ""
+            if (param.isEmpty() || param.toInt() != currentUser?.id) {  navController.navigate("login") { }
 
             Scaffold(modifier = Modifier.fillMaxSize(),
                 bottomBar =
@@ -192,14 +217,15 @@ fun AppNavigation() {
                             }
                         }
                     }
-            ) { innerPadding ->
-                Column(modifier = Modifier.padding(innerPadding)) {
-                    Header(
-                        title = routes[selectedItem].name,
-                        onIconClick = { navController.popBackStack(); selectedItem = lastSelectedItem; }
-                    )
+                ) { innerPadding ->
+                    Column(modifier = Modifier.padding(innerPadding)) {
+                        Header(
+                            title = routes[selectedItem].name,
+                            onIconClick = { navController.popBackStack(); val aux = selectedItem; selectedItem = lastSelectedItem; lastSelectedItem = aux; }
+                        )
 
-                    TransferScreen()
+                        TransactionScreen(currentUser)
+                    }
                 }
             }
         }

@@ -1,6 +1,5 @@
 package com.example.bankingapp
 
-import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -25,33 +24,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.bankingapp.controllers.PreferencesHelper
 import com.example.bankingapp.controllers.ProfileData
-import com.example.bankingapp.lists.profileList
 
 @Composable
-fun EditProfileScreen() {
-    val context = LocalContext.current
-    val prefs = remember { PreferencesHelper(context) }
-    val profile = prefs.user ?: return
+fun EditProfileScreen(profile: ProfileData, onSaveChanges: (firstName: String, lastName: String, phone: String, email: String) -> Unit) {
 
     var firstName by remember { mutableStateOf(profile.firstName) }
     var lastName by remember { mutableStateOf(profile.lastName) }
     var phone by remember { mutableStateOf(profile.phone) }
     var email by remember { mutableStateOf(profile.email) }
-
-    fun saveProfile(context: Context, firstName: String, lastName: String, phone: String, email: String) {
-        val updatedProfile = ProfileData(profile.id, firstName, lastName, phone, email, password = profile.password)
-        val index = profileList.indexOfFirst { it.id == profile.id }
-        if (index != -1) {
-            profileList[index] = updatedProfile
-        }
-        prefs.user = updatedProfile
-    }
 
     Column(
         modifier = Modifier
@@ -115,7 +98,7 @@ fun EditProfileScreen() {
             Spacer(modifier = Modifier.height(16.dp))
 
             Button(
-                onClick = { saveProfile(context, firstName, lastName, phone, email) },
+                onClick = { onSaveChanges(firstName, lastName, phone, email) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
@@ -133,8 +116,8 @@ fun EditProfileScreen() {
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun EditProfilePreview() {
-    EditProfileScreen()
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun EditProfilePreview() {
+//    EditProfileScreen()
+//}

@@ -11,10 +11,10 @@ fun populateWithGenericProfiles() {
     profileList.add(
         ProfileData(
             id = 1,
-            firstName = "Alice",
-            lastName = "Wonderland",
-            email = "alice.wonderland@example.com",
-            phone = "99999999",
+            firstName = "a",
+            lastName = "b",
+            email = "abc",
+            phone = "9",
             password = "123"
         )
     )
@@ -41,10 +41,10 @@ fun populateWithGenericProfiles() {
     profileList.add(
         ProfileData(
             id = 4,
-            firstName = "a",
-            lastName = "b",
-            email = "ab@gmail.com",
-            phone = "9",
+            firstName = "Alice",
+            lastName = "Wonderland",
+            email = "alice.wonderland@example.com",
+            phone = "99999999",
             password = "123"
         )
     )

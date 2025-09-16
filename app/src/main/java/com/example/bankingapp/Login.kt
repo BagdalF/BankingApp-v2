@@ -19,16 +19,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
-import com.example.bankingapp.controllers.PreferencesHelper
-import com.example.bankingapp.lists.profileList
 
 @Composable
-fun LoginScreen(navController: NavController, context: android.content.Context) {
+fun LoginScreen(onLogin: (email: String, password: String, errorMessage: () -> Unit) -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -46,6 +42,18 @@ fun LoginScreen(navController: NavController, context: android.content.Context) 
                 .fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            Text(
+                text = "Welcome!",
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black
+            )
+            Text(
+                text = "Please sign in to continue",
+                fontSize = 16.sp,
+                color = Color.Gray
+            )
+            Spacer(modifier = Modifier.height(16.dp))
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
@@ -69,19 +77,7 @@ fun LoginScreen(navController: NavController, context: android.content.Context) 
             Spacer(modifier = Modifier.height(16.dp))
 
             Button(
-                onClick = {
-                    val user = profileList.find { it.email == email && it.password == password }
-                    if (user != null) {
-                        val prefs = PreferencesHelper(context)
-                        prefs.user = user
-                        prefs.isLogged = true
-                        navController.navigate("profile/${'$'}{user.id}") {
-                            popUpTo("login") { inclusive = true }
-                        }
-                    } else {
-                        errorMessage = "Invalid credentials."
-                    }
-                },
+                onClick = { onLogin(email, password) { errorMessage = "Invalid credentials." } },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
@@ -96,10 +92,10 @@ fun LoginScreen(navController: NavController, context: android.content.Context) 
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun LoginPreview() {
-    val context = LocalContext.current
-    // Dummy NavController for preview
-    LoginScreen(navController = object : NavController(context) {}, context = context)
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun LoginPreview() {
+//    val context = LocalContext.current
+//    // Dummy NavController for preview
+//    LoginScreen(navController = object : NavController(context) {}, context = context)
+//}
