@@ -1,5 +1,6 @@
 package com.example.bankingapp
 
+import InitialScreen
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -50,7 +51,7 @@ class BankingAppActivity : ComponentActivity() {
     }
 }
 
-data class Route( val name: String, val route: String, val icon: ImageVector )
+data class Route(val name: String, val route: String, val icon: ImageVector)
 
 @Composable
 fun AppNavigation() {
@@ -62,28 +63,22 @@ fun AppNavigation() {
     var selectedItem by remember { mutableIntStateOf(0) }
     var lastSelectedItem by remember { mutableIntStateOf(0) }
     val routes = listOf(
-        Route("Profile", "profile/${'$'}{user.id}", Icons.Filled.Person),
-        Route("Bank Statement", "statement/${'$'}{user.id}", Icons.Filled.Settings),
-        Route("Transaction", "transaction/${'$'}{user.id}", Icons.Filled.Info)
+        Route("Profile", "profile/{id}", Icons.Filled.Person),
+        Route("Bank Statement", "statement/{id}", Icons.Filled.Settings),
+        Route("Transaction", "transaction/{id}", Icons.Filled.Info)
     )
 
     NavHost(navController = navController, startDestination = "login") {
         composable("login") {
-            Header(
-                title = "Login"
-            )
-
-            Scaffold(modifier = Modifier.fillMaxSize()) {
-                innerPadding ->
-
+            Header(title = "Login")
+            Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                 Column(modifier = Modifier.padding(innerPadding)) {
-                    LoginScreen {
-                        email, password, errorMessage ->
+                    LoginScreen { email, password, errorMessage ->
                         val user = profileList.find { it.email == email && it.password == password }
                         if (user != null) {
                             prefs.user = user
                             prefs.isLogged = true
-                            navController.navigate("profile/${'$'}{user.id}") {
+                            navController.navigate("home/${user.id}") {
                                 popUpTo("login") { inclusive = true }
                             }
                         } else {
@@ -93,139 +88,217 @@ fun AppNavigation() {
                 }
             }
         }
-        composable("profile/{id}") {
-            backstackEntry ->
+
+        // Tela inicial após login
+        composable("home/{id}") { backstackEntry ->
             val param = backstackEntry.arguments?.getString("id") ?: ""
-            if (param.isEmpty() || param.toInt() != currentUser?.id) {  navController.navigate("login") { }
+            if (param.isEmpty() || param.toInt() != currentUser?.id) {
+                navController.navigate("login") {
+                    popUpTo("login") { inclusive = true }
+                }
+            }
 
-            Scaffold(modifier = Modifier.fillMaxSize(),
-                bottomBar =
-                    {
-                        NavigationBar(
-                            containerColor = Color.White,
-                            tonalElevation = 8.dp,
-                            modifier = Modifier.height(100.dp)
-                        ) {
-                            routes.forEachIndexed { index, item ->
-                                NavigationBarItem(
-                                    icon = { Icon(item.icon, contentDescription = null) },
-                                    label = { Text(item.name) },
-                                    selected = selectedItem == index,
-                                    onClick = { navController.navigate(item.route); lastSelectedItem = selectedItem; selectedItem = index; },
-                                    alwaysShowLabel = true,
-                                    colors = NavigationBarItemDefaults.colors(
-                                        selectedIconColor = Color.White,
-                                        selectedTextColor = Color.DarkGray,
-                                        unselectedIconColor = Color.DarkGray,
-                                        unselectedTextColor = Color.DarkGray,
-                                        indicatorColor = Color(0xFF1976D2)
-                                    )
-                                )
-                            }
-                        }
-                    }
+            Scaffold(modifier = Modifier.fillMaxSize(), bottomBar = {
+                NavigationBar(
+                    containerColor = Color.White,
+                    tonalElevation = 8.dp,
+                    modifier = Modifier.height(100.dp)
                 ) {
-                    innerPadding ->
-                    Column(modifier = Modifier.padding(innerPadding)) {
-                        Header(
-                            title = routes[selectedItem].name,
-                            onIconClick = { navController.popBackStack(); val aux = selectedItem; selectedItem = lastSelectedItem; lastSelectedItem = aux; }
+                    routes.forEachIndexed { index, item ->
+                        NavigationBarItem(
+                            icon = { Icon(item.icon, contentDescription = null) },
+                            label = { Text(item.name) },
+                            selected = selectedItem == index,
+                            onClick = {
+                                navController.navigate(item.route)
+                                lastSelectedItem = selectedItem
+                                selectedItem = index
+                            },
+                            alwaysShowLabel = true,
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = Color.White,
+                                selectedTextColor = Color.DarkGray,
+                                unselectedIconColor = Color.DarkGray,
+                                unselectedTextColor = Color.DarkGray,
+                                indicatorColor = Color(0xFF1976D2)
+                            )
                         )
+                    }
+                }
+            }) { innerPadding ->
+                Column(modifier = Modifier.padding(innerPadding)) {
+                    Header(
+                        title = "Home",
+                        onIconClick = {
+                            navController.popBackStack()
+                            val aux = selectedItem
+                            selectedItem = lastSelectedItem
+                            lastSelectedItem = aux
+                        }
+                    )
 
-                        EditProfileScreen(currentUser!!, onSaveChanges = { firstName, lastName, phone, email ->
-                            val updatedProfile = ProfileData(id = currentUser.id, firstName, lastName, phone, email, password = currentUser.password)
-                            val index = profileList.indexOfFirst { it.id == currentUser.id }
-                            if (index != -1) {
-                                profileList[index] = updatedProfile
-                            }
-                            prefs.user = updatedProfile
-                        })
+                    InitialScreen(currentUser)
+                }
+            }
+        }
+
+        composable("profile/{id}") { backstackEntry ->
+            val param = backstackEntry.arguments?.getString("id") ?: ""
+            if (param.isEmpty() || param.toInt() != currentUser?.id) {
+                navController.navigate("login") { popUpTo("login") { inclusive = true } }
+            }
+
+            Scaffold(modifier = Modifier.fillMaxSize(), bottomBar = {
+                NavigationBar(
+                    containerColor = Color.White,
+                    tonalElevation = 8.dp,
+                    modifier = Modifier.height(100.dp)
+                ) {
+                    routes.forEachIndexed { index, item ->
+                        NavigationBarItem(
+                            icon = { Icon(item.icon, contentDescription = null) },
+                            label = { Text(item.name) },
+                            selected = selectedItem == index,
+                            onClick = {
+                                navController.navigate(item.route)
+                                lastSelectedItem = selectedItem
+                                selectedItem = index
+                            },
+                            alwaysShowLabel = true,
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = Color.White,
+                                selectedTextColor = Color.DarkGray,
+                                unselectedIconColor = Color.DarkGray,
+                                unselectedTextColor = Color.DarkGray,
+                                indicatorColor = Color(0xFF1976D2)
+                            )
+                        )
+                    }
+                }
+            }) { innerPadding ->
+                Column(modifier = Modifier.padding(innerPadding)) {
+                    Header(
+                        title = routes[selectedItem].name,
+                        onIconClick = {
+                            navController.popBackStack()
+                            val aux = selectedItem
+                            selectedItem = lastSelectedItem
+                            lastSelectedItem = aux
+                        }
+                    )
+
+                    EditProfileScreen(currentUser!!) { firstName, lastName, phone, email ->
+                        val updatedProfile = ProfileData(
+                            id = currentUser.id,
+                            firstName, lastName, phone, email,
+                            password = currentUser.password
+                        )
+                        val index = profileList.indexOfFirst { it.id == currentUser.id }
+                        if (index != -1) {
+                            profileList[index] = updatedProfile
+                        }
+                        prefs.user = updatedProfile
                     }
                 }
             }
         }
-        composable("statement/{id}") {
-            backstackEntry ->
-            val param = backstackEntry.arguments?.getString("id") ?: ""
-            if (param.isEmpty() || param.toInt() != currentUser?.id) {  navController.navigate("login") { } }
 
-            Scaffold( modifier = Modifier.fillMaxSize(),
-                bottomBar =
-                    {
-                        NavigationBar(
-                            containerColor = Color.White,
-                            tonalElevation = 8.dp,
-                            modifier = Modifier.height(100.dp)
-                        ) {
-                            routes.forEachIndexed { index, item ->
-                                NavigationBarItem(
-                                    icon = { Icon(item.icon, contentDescription = null) },
-                                    label = { Text(item.name) },
-                                    selected = selectedItem == index,
-                                    onClick = { navController.navigate(item.route); lastSelectedItem = selectedItem; selectedItem = index; },
-                                    alwaysShowLabel = true,
-                                    colors = NavigationBarItemDefaults.colors(
-                                        selectedIconColor = Color.White,
-                                        selectedTextColor = Color.DarkGray,
-                                        unselectedIconColor = Color.DarkGray,
-                                        unselectedTextColor = Color.DarkGray,
-                                        indicatorColor = Color(0xFF1976D2)
-                                    )
-                                )
-                            }
-                        }
+        composable("statement/{id}") { backstackEntry ->
+            val param = backstackEntry.arguments?.getString("id") ?: ""
+            if (param.isEmpty() || param.toInt() != currentUser?.id) {
+                navController.navigate("login") { popUpTo("login") { inclusive = true } }
+            }
+
+            Scaffold(modifier = Modifier.fillMaxSize(), bottomBar = {
+                NavigationBar(
+                    containerColor = Color.White,
+                    tonalElevation = 8.dp,
+                    modifier = Modifier.height(100.dp)
+                ) {
+                    routes.forEachIndexed { index, item ->
+                        NavigationBarItem(
+                            icon = { Icon(item.icon, contentDescription = null) },
+                            label = { Text(item.name) },
+                            selected = selectedItem == index,
+                            onClick = {
+                                navController.navigate(item.route)
+                                lastSelectedItem = selectedItem
+                                selectedItem = index
+                            },
+                            alwaysShowLabel = true,
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = Color.White,
+                                selectedTextColor = Color.DarkGray,
+                                unselectedIconColor = Color.DarkGray,
+                                unselectedTextColor = Color.DarkGray,
+                                indicatorColor = Color(0xFF1976D2)
+                            )
+                        )
                     }
-            ) { innerPadding ->
+                }
+            }) { innerPadding ->
                 Column(modifier = Modifier.padding(innerPadding)) {
                     Header(
                         title = routes[selectedItem].name,
-                        onIconClick = { navController.popBackStack(); val aux = selectedItem; selectedItem = lastSelectedItem; lastSelectedItem = aux; }
+                        onIconClick = {
+                            navController.popBackStack()
+                            val aux = selectedItem
+                            selectedItem = lastSelectedItem
+                            lastSelectedItem = aux
+                        }
                     )
 
                     StatementScreen(currentUser)
                 }
             }
         }
-        composable("transaction/{id}") {
-            backstackEntry ->
+
+        composable("transaction/{id}") { backstackEntry ->
             val param = backstackEntry.arguments?.getString("id") ?: ""
-            if (param.isEmpty() || param.toInt() != currentUser?.id) {  navController.navigate("login") { }
+            if (param.isEmpty() || param.toInt() != currentUser?.id) {
+                navController.navigate("login") { popUpTo("login") { inclusive = true } }
+            }
 
-            Scaffold(modifier = Modifier.fillMaxSize(),
-                bottomBar =
-                    {
-                        NavigationBar(
-                            containerColor = Color.White,
-                            tonalElevation = 8.dp,
-                            modifier = Modifier.height(100.dp)
-                        ) {
-                            routes.forEachIndexed { index, item ->
-                                NavigationBarItem(
-                                    icon = { Icon(item.icon, contentDescription = null) },
-                                    label = { Text(item.name) },
-                                    selected = selectedItem == index,
-                                    onClick = { navController.navigate(item.route); lastSelectedItem = selectedItem; selectedItem = index; },
-                                    alwaysShowLabel = true,
-                                    colors = NavigationBarItemDefaults.colors(
-                                        selectedIconColor = Color.White,
-                                        selectedTextColor = Color.DarkGray,
-                                        unselectedIconColor = Color.DarkGray,
-                                        unselectedTextColor = Color.DarkGray,
-                                        indicatorColor = Color(0xFF1976D2)
-                                    )
-                                )
-                            }
-                        }
-                    }
-                ) { innerPadding ->
-                    Column(modifier = Modifier.padding(innerPadding)) {
-                        Header(
-                            title = routes[selectedItem].name,
-                            onIconClick = { navController.popBackStack(); val aux = selectedItem; selectedItem = lastSelectedItem; lastSelectedItem = aux; }
+            Scaffold(modifier = Modifier.fillMaxSize(), bottomBar = {
+                NavigationBar(
+                    containerColor = Color.White,
+                    tonalElevation = 8.dp,
+                    modifier = Modifier.height(100.dp)
+                ) {
+                    routes.forEachIndexed { index, item ->
+                        NavigationBarItem(
+                            icon = { Icon(item.icon, contentDescription = null) },
+                            label = { Text(item.name) },
+                            selected = selectedItem == index,
+                            onClick = {
+                                navController.navigate(item.route)
+                                lastSelectedItem = selectedItem
+                                selectedItem = index
+                            },
+                            alwaysShowLabel = true,
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = Color.White,
+                                selectedTextColor = Color.DarkGray,
+                                unselectedIconColor = Color.DarkGray,
+                                unselectedTextColor = Color.DarkGray,
+                                indicatorColor = Color(0xFF1976D2)
+                            )
                         )
-
-                        TransactionScreen(currentUser)
                     }
+                }
+            }) { innerPadding ->
+                Column(modifier = Modifier.padding(innerPadding)) {
+                    Header(
+                        title = routes[selectedItem].name,
+                        onIconClick = {
+                            navController.popBackStack()
+                            val aux = selectedItem
+                            selectedItem = lastSelectedItem
+                            lastSelectedItem = aux
+                        }
+                    )
+
+                    TransactionScreen(currentUser)
                 }
             }
         }
