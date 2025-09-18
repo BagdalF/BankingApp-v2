@@ -1,9 +1,6 @@
-import android.os.Bundle
-import android.provider.ContactsContract.Profile
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
+package com.example.bankingapp
+
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -13,30 +10,23 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.bankingapp.EditProfileScreen
 import com.example.bankingapp.controllers.ProfileData
-import com.example.bankingapp.lists.profileList
-import kotlinx.serialization.Contextual
-import android.widget.Toast
 
 // Data class for investment tips
-public data class TipInvestment(
+data class TipInvestment(
     val title: String,
     val desc: String,
 )
 
 @Composable
-fun InitialScreen(currentUser: ProfileData?,) {
+fun HomeScreen(currentUser: ProfileData?) {
 
     val listOfTips = listOf(
         TipInvestment("Seja Bem-vindo!", "Ficamos muitos felizes por ter você conosco!"),
@@ -131,7 +121,6 @@ fun CardTips(tip: TipInvestment) {
 
 @Composable
 fun BalanceCard() {
-    val context = LocalContext.current
     var showBalance by remember { mutableStateOf(false) }
 
     Card(
@@ -161,24 +150,7 @@ fun BalanceCard() {
                 color = Color(0xFF1976D2),
                 modifier = Modifier
                     .padding(start = 8.dp)
-                    .clickable {
-                        showBalance = !showBalance
-                        Toast.makeText(
-                            context,
-                            if (showBalance) "Saldo exibido" else "Saldo ocultado",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
             )
         }
     }
 }
-
-/*@Preview(showBackground = true)
-@Composable
-fun PreviewStatementScreen() {
-    val context = LocalContext.current
-    val profile = remember { EditProfileScreen(context) }
-
-    InitialScreen(profile = profile)
-}*/

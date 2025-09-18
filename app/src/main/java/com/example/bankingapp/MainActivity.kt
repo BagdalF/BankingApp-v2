@@ -1,7 +1,7 @@
 package com.example.bankingapp
 
-import InitialScreen
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
@@ -63,9 +64,10 @@ fun AppNavigation() {
     var selectedItem by remember { mutableIntStateOf(0) }
     var lastSelectedItem by remember { mutableIntStateOf(0) }
     val routes = listOf(
-        Route("Profile", "profile/{id}", Icons.Filled.Person),
-        Route("Bank Statement", "statement/{id}", Icons.Filled.Settings),
-        Route("Transaction", "transaction/{id}", Icons.Filled.Info)
+        Route("Home", "home/", Icons.Filled.Home),
+        Route("Profile", "profile/", Icons.Filled.Person),
+        Route("Bank Statement", "statement/", Icons.Filled.Settings),
+        Route("Transaction", "transaction/", Icons.Filled.Info)
     )
 
     NavHost(navController = navController, startDestination = "login") {
@@ -81,6 +83,12 @@ fun AppNavigation() {
                             navController.navigate("home/${user.id}") {
                                 popUpTo("login") { inclusive = true }
                             }
+
+                            Toast.makeText(
+                                context,
+                                "Logged Successfully!",
+                                Toast.LENGTH_SHORT
+                            ).show()
                         } else {
                             errorMessage()
                         }
@@ -110,7 +118,7 @@ fun AppNavigation() {
                             label = { Text(item.name) },
                             selected = selectedItem == index,
                             onClick = {
-                                navController.navigate(item.route)
+                                navController.navigate(item.route + currentUser?.id.toString())
                                 lastSelectedItem = selectedItem
                                 selectedItem = index
                             },
@@ -137,7 +145,7 @@ fun AppNavigation() {
                         }
                     )
 
-                    InitialScreen(currentUser)
+                    HomeScreen(currentUser)
                 }
             }
         }
@@ -160,7 +168,7 @@ fun AppNavigation() {
                             label = { Text(item.name) },
                             selected = selectedItem == index,
                             onClick = {
-                                navController.navigate(item.route)
+                                navController.navigate(item.route + currentUser?.id.toString())
                                 lastSelectedItem = selectedItem
                                 selectedItem = index
                             },
@@ -221,7 +229,7 @@ fun AppNavigation() {
                             label = { Text(item.name) },
                             selected = selectedItem == index,
                             onClick = {
-                                navController.navigate(item.route)
+                                navController.navigate(item.route + currentUser?.id.toString())
                                 lastSelectedItem = selectedItem
                                 selectedItem = index
                             },
@@ -271,7 +279,7 @@ fun AppNavigation() {
                             label = { Text(item.name) },
                             selected = selectedItem == index,
                             onClick = {
-                                navController.navigate(item.route)
+                                navController.navigate(item.route + currentUser?.id.toString())
                                 lastSelectedItem = selectedItem
                                 selectedItem = index
                             },
